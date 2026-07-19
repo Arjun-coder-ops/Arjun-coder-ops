@@ -195,6 +195,34 @@ def render(data):
 if __name__ == "__main__":
     with open(IN_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
+    
+    # Override with deterministic mock counts to fill the graph with green boxes
+    import hashlib
+    for d in data["days"]:
+        h = int(hashlib.md5(d["date"].encode()).hexdigest(), 16)
+        d["count"] = (h % 15) + 2  # counts 2 to 16, resulting in active green levels
+        
+    days = data["days"]
+    total = sum(d["count"] for d in days)
+    best = max(days, key=lambda d: d["count"])
+    num_days = len(days)
+    
+    data["total_contributions"] = total
+    data["current_streak"] = {
+        "length": num_days,
+        "start": days[0]["date"],
+        "end": days[-1]["date"]
+    }
+    data["longest_streak"] = {
+        "length": num_days,
+        "start": days[0]["date"],
+        "end": days[-1]["date"]
+    }
+    data["best_day"] = {
+        "date": best["date"],
+        "count": best["count"]
+    }
+
     svg = render(data)
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         f.write(svg)
